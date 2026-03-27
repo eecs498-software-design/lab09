@@ -1,88 +1,123 @@
 /**
  * Exercise 2 — Exception guarantees
  *
- * In this file you will inspect and strengthen methods so they provide
- * better exception-safety guarantees.
+ * In this file you will:
+ * - identify methods that only provide the basic guarantee or worse
+ * - upgrade methods toward the strong guarantee
+ * - use “do stuff that can fail first” and temp-then-commit
  *
- * Focus on:
- * - the basic guarantee
- * - the strong guarantee
- * - doing failure-prone work before mutating visible state
+ * Goal:
+ * Preserve state and invariants when copying work can throw.
  */
 
-class FragileBuilder {
-  private _parts: string[];
+class CopyError extends Error {}
 
-  constructor(parts: string[]) {
-    this._parts = [...parts];
+function copyTokenOrThrow(token: string): string {
+  if (token === "BOOM") {
+    throw new CopyError("copy failed");
+  }
+  return `${token}`;
+}
+
+function copyWithPrefixOrThrow(prefix: string, token: string): string {
+  return `${prefix}${copyTokenOrThrow(token)}`;
+}
+
+class TokenBuffer {
+  private items: string[];
+  private shadowSize: number;
+
+  constructor(items: readonly string[]) {
+    this.items = [...items];
+    this.shadowSize = this.items.length;
   }
 
-  toString(): string {
-    return this._parts.join("|");
+  snapshot(): string {
+    return this.items.join(",");
   }
 
-  // ---------- Worked example ----------
-  appendWithPossibleFailure(next: string, failAfterAppend: boolean): void {
-    this._parts.push(next); // state changed first
-    if (failAfterAppend) {
-      throw new Error("failed after append");
+  invariantHolds(): boolean {
+    return this.shadowSize === this.items.length;
+  }
+
+  // TODO:
+  // Fix this to provide the strong guarantee.
+  // Right now, if copying the last item throws, the item has already been removed.
+  popLastCopy(): string {
+    if (this.items.length === 0) {
+      throw new Error("empty buffer");
+    }
+    const raw = this.items.pop()!;
+    this.shadowSize = this.items.length;
+    return copyTokenOrThrow(raw);
+  }
+
+  // TODO:
+  // This is closer to an assignment operator.
+  // Right now, a throw can leave this object partially rewritten
+  // with shadowSize already set to the wrong value.
+  // Upgrade it to provide the strong guarantee.
+  assignFrom(rhs: TokenBuffer): void {
+    if (this === rhs) {
+      return;
+    }
+    this.items = [];
+    this.shadowSize = rhs.items.length;
+    for (const token of rhs.items) {
+      this.items.push(copyTokenOrThrow(token));
     }
   }
 
-  // ---------- Exercise 2A ----------
-  popLastCopy(failWhileCopying: boolean): string[] {
-    // TODO:
-    // Current design mutates visible state too early.
-    // Redesign so that failure does not leave this object half-updated.
-    const removed = this._parts.pop();
-    if (failWhileCopying) {
-      throw new Error("copy failed");
+  // TODO:
+  // Right now, this mutates items in place.
+  // If one copy throws midway through, the state is only partially rewritten.
+  // Upgrade it to provide the strong guarantee.
+  prefixAll(prefix: string): void {
+    for (let i = 0; i < this.items.length; ++i) {
+      this.items[i] = copyWithPrefixOrThrow(prefix, this.items[i]);
     }
-    return removed === undefined ? [] : [removed];
-  }
-
-  // ---------- Exercise 2B ----------
-  assignFrom(other: FragileBuilder, failWhileCloning: boolean): void {
-    // TODO:
-    // Current design clears and rebuilds in place.
-    // Strengthen its guarantee.
-    this._parts = [];
-    for (const part of other._parts) {
-      if (failWhileCloning && part === "B") {
-        throw new Error("clone failed");
-      }
-      this._parts.push(part);
-    }
-  }
-
-  // ---------- Exercise 2C ----------
-  prefixAll(prefix: string, failOn: string | null): void {
-    // TODO:
-    // Current design updates part-by-part.
-    // Strengthen its guarantee.
-    for (let i = 0; i < this._parts.length; ++i) {
-      if (failOn !== null && this._parts[i] === failOn) {
-        throw new Error("prefix failed");
-      }
-      this._parts[i] = prefix + this._parts[i];
-    }
+    this.shadowSize = this.items.length;
   }
 }
 
-const exA = new FragileBuilder(["A", "B", "C"]);
-try {
-  exA.popLastCopy(true);
-} catch {}
-console.log("2A state:", exA.toString());
+const popSuccess = new TokenBuffer(["A", "B", "C"]);
+console.log("pop success value:", popSuccess.popLastCopy());
+console.log("pop success state:", popSuccess.snapshot());
+console.log("pop success invariant:", popSuccess.invariantHolds());
 
-const exB = new FragileBuilder(["old"]);
+const popFailure = new TokenBuffer(["X", "BOOM"]);
 try {
-  exB.assignFrom(new FragileBuilder(["A", "B", "C"]), true);
-} catch {}
-console.log("2B state:", exB.toString());
+  popFailure.popLastCopy();
+} catch (_error) {
+  // expected
+}
+console.log("pop failure state:", popFailure.snapshot());
+console.log("pop failure invariant:", popFailure.invariantHolds());
 
-const exC = new FragileBuilder(["A", "B", "C"]);
+const assignSuccessDst = new TokenBuffer(["old"]);
+assignSuccessDst.assignFrom(new TokenBuffer(["CUP", "PLATE"]));
+console.log("assign success state:", assignSuccessDst.snapshot());
+console.log("assign success invariant:", assignSuccessDst.invariantHolds());
+
+const assignFailureDst = new TokenBuffer(["keep1", "keep2"]);
 try {
-  exC.prefixAll("x-", "B");
-} catch {}
-console.log("2C state:", exC.toString());
+  assignFailureDst.assignFrom(new TokenBuffer(["SAFE", "BOOM"]));
+} catch (_error) {
+  // expected
+}
+console.log("assign failure state:", assignFailureDst.snapshot());
+console.log("assign failure invariant:", assignFailureDst.invariantHolds());
+
+const prefixSuccess = new TokenBuffer(["A", "B"]);
+prefixSuccess.prefixAll("PRE-");
+console.log("prefix success state:", prefixSuccess.snapshot());
+console.log("prefix success invariant:", prefixSuccess.invariantHolds());
+
+const prefixFailure = new TokenBuffer(["SAFE", "BOOM", "LAST"]);
+try {
+  prefixFailure.prefixAll("PRE-");
+} catch (_error) {
+  // expected
+}
+console.log("prefix failure state:", prefixFailure.snapshot());
+console.log("prefix failure invariant:", prefixFailure.invariantHolds());

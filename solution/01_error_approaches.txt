@@ -1,5 +1,10 @@
-example: Ada
-1A result: manual-1
-1B result: autosave
-1C ok: false
-1C detail: No such save slot
+eafp good: Loaded save slot 1
+eafp parse error: Invalid input: Expected 1, 2, or q.
+eafp missing save: Cannot load save: slot 2 is empty
+eafp quit: Thanks for playing!
+lbyl ok: Favorite: autosave
+lbyl bad: Index out of range
+assert ok: backup
+assert caught: true
+result ok: SAVE_DATA
+result error: Autosave not found

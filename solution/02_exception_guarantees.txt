@@ -1,3 +1,13 @@
-2A state: A|B|C
-2B state: old
-2C state: A|B|C
+pop success value: C
+pop success state: A,B
+pop success invariant: true
+pop failure state: X,BOOM
+pop failure invariant: true
+assign success state: CUP,PLATE
+assign success invariant: true
+assign failure state: keep1,keep2
+assign failure invariant: true
+prefix success state: PRE-A,PRE-B
+prefix success invariant: true
+prefix failure state: SAFE,BOOM,LAST
+prefix failure invariant: true
