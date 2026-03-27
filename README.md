@@ -5,14 +5,12 @@ This repo follows the same format as the previous labs:
 - each exercise lives in `src/`
 - each exercise prints deterministic output
 - `npm run test` runs the student files and diffs them against the expected output in `solution/`
-- `teacher_solution_src/` contains completed reference implementations
-- `npm run teacher:test` runs the teacher versions directly
 
 ## Setup
 
 ```bash
 npm install
-npm run teacher:test
+npm run test
 ```
 
 The student files contain `TODO`s and are intended to be edited during lab.
@@ -45,10 +43,6 @@ This file has three small exercises:
 - **1C** errors as values
 
 Each part includes a tiny worked example before the TODOs.
-
-Teacher version:
-```bash
-npm run teacher:ex01
 ```
 
 ---
@@ -65,10 +59,6 @@ This file focuses on exception safety:
   - `prefixAll`
 
 The goal is not just “catch errors,” but to change the code so failures do not corrupt state.
-
-Teacher version:
-```bash
-npm run teacher:ex02
 ```
 
 ---
@@ -84,10 +74,6 @@ This file asks you to redesign functions so they do **not** throw:
 
 The question in each case is:
 > can the abstraction reasonably handle this case itself instead of making the caller deal with it?
-
-Teacher version:
-```bash
-npm run teacher:ex03
 ```
 
 ---
@@ -97,9 +83,4 @@ npm run teacher:ex03
 Student files:
 ```bash
 npm run test
-```
-
-Teacher files:
-```bash
-npm run teacher:test
 ```
