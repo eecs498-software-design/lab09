@@ -1,2 +1,4 @@
 SLIDES.md
 teacher_solution_src/
+node_modules/
+package-lock.json
