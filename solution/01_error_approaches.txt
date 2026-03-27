@@ -1,0 +1,5 @@
+example: Ada
+1A result: manual-1
+1B result: autosave
+1C ok: false
+1C detail: No such save slot

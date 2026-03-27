@@ -1,0 +1,4 @@
+example: 
+removeLast result: undefined
+first char: 
+page result: []

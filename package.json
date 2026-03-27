@@ -1,0 +1,22 @@
+{
+  "name": "error-handling-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "npm run ex01 && npm run ex02 && npm run ex03 && npm run diff",
+    "ex01": "tsx src/01_error_approaches.ts > out/01_error_approaches.txt",
+    "ex02": "tsx src/02_exception_guarantees.ts > out/02_exception_guarantees.txt",
+    "ex03": "tsx src/03_define_errors_out_of_existence.ts > out/03_define_errors_out_of_existence.txt",
+    "diff": "diff -rs out solution",
+    "teacher:ex01": "tsx teacher_solution_src/01_error_approaches.ts",
+    "teacher:ex02": "tsx teacher_solution_src/02_exception_guarantees.ts",
+    "teacher:ex03": "tsx teacher_solution_src/03_define_errors_out_of_existence.ts",
+    "teacher:test": "npm run teacher:ex01 && npm run teacher:ex02 && npm run teacher:ex03"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
